@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 import java.time.LocalDateTime;
 
@@ -15,6 +16,14 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(InvalidFormDataException.class)
     public ResponseEntity<ErrorPayload> handleInvalidFormDataException(InvalidFormDataException exception) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                new ErrorPayload(HttpStatus.BAD_REQUEST, exception.getMessage(), LocalDateTime.now())
+        );
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<ErrorPayload> handleMissingServletRequestPartException(MissingServletRequestPartException exception) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
                 new ErrorPayload(HttpStatus.BAD_REQUEST, exception.getMessage(), LocalDateTime.now())
         );

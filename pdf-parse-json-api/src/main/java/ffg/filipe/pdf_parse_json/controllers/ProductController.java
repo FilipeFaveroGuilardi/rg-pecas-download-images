@@ -1,6 +1,7 @@
 package ffg.filipe.pdf_parse_json.controllers;
 
 import ffg.filipe.pdf_parse_json.domain.Product;
+import ffg.filipe.pdf_parse_json.exceptions.InvalidFormDataException;
 import ffg.filipe.pdf_parse_json.services.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -21,8 +22,6 @@ public class ProductController {
                 @RequestParam(required = false, name = "width", defaultValue = "-1") Double width,
                 @RequestParam(required = false, name = "height", defaultValue = "-1") Double height
             ) {
-
-
 
         return  ResponseEntity
                 .status(200)
