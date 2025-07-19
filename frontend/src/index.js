@@ -1,11 +1,14 @@
-const { app, BrowserWindow, Menu, MenuItem } = require("electron")
+const { app, BrowserWindow, Menu, MenuItem, dialog } = require("electron")
+const path = require("path")
+const fs = require("fs")
+const { createFoldersAndJsonFilesWithPdfFiles } = require("./helper/pdfHelper")
 
 const createWindow = () => {
     const window = new BrowserWindow({
         height: 720,
         width: 1024,
         webPreferences: {
-            preload: "./preload.js"
+            preload: path.join(__dirname, "preload.js")
         }
     })
 
@@ -15,15 +18,16 @@ const createWindow = () => {
 
 
 const menu = new Menu()
-// config buttons
+// create config menu
 menu.append(new MenuItem({
     label: "config",
     submenu: [
-        // create json files sub menu
+        // create json files submenu
         {
-            label: "create json files"
+            label: "create json files",
+            click: () => handleCreateJsonFiles()
         },
-        // set json file sub menu
+        // set json file submenu
         {
             label: "set json db"
         }
@@ -32,8 +36,26 @@ menu.append(new MenuItem({
 
 Menu.setApplicationMenu(menu)
 
+// run app
 app.whenReady()
     .then(() => {
         createWindow()
     })
     .catch((err) => console.error(err))
+
+// functions
+const handleCreateJsonFiles = async () => {
+    const {canceled, filePaths} = await dialog.showOpenDialog({
+        properties: ["multiSelections"]
+    })
+
+    if (canceled) {
+        return;
+    }
+
+    for(let pdfFilePath of filePaths) {
+        const stream = fs.createReadStream(pdfFilePath)
+
+        createFoldersAndJsonFilesWithPdfFiles(stream, path.basename(pdfFilePath))
+    }
+}
