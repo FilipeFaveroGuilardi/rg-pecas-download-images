@@ -1,7 +1,8 @@
-const { app, BrowserWindow, Menu, MenuItem, dialog } = require("electron")
+const { app, BrowserWindow, Menu, MenuItem, dialog, ipcMain } = require("electron")
 const path = require("path")
 const fs = require("fs")
 const { createFoldersAndJsonFilesWithPdfFiles } = require("./helper/pdfHelper")
+const { downloadImage } = require("./helper/downloadHelper")
 
 const createWindow = () => {
     const window = new BrowserWindow({
@@ -39,6 +40,9 @@ Menu.setApplicationMenu(menu)
 // run app
 app.whenReady()
     .then(() => {
+        ipcMain.on("download-image", handleDownloadImage)
+
+
         createWindow()
     })
     .catch((err) => console.error(err))
@@ -58,4 +62,8 @@ const handleCreateJsonFiles = async () => {
 
         createFoldersAndJsonFilesWithPdfFiles(stream, path.basename(pdfFilePath))
     }
+}
+
+const handleDownloadImage = (event) => {
+    downloadImage("asdasdasd", "/home/favero/Documentos/Codigo/produtosPai/frontend/img.jpg")
 }
