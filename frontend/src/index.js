@@ -35,7 +35,7 @@ menu.append(new MenuItem({
     ]
 }))
 
-Menu.setApplicationMenu(menu)
+//Menu.setApplicationMenu(menu)
 
 // run app
 app.whenReady()

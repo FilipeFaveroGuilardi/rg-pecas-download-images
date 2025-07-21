@@ -1,9 +1,11 @@
 const downloadButton = document.getElementById("download")
-const imagesDiv = document.getElementById(imagesDiv)
+const imagesDiv = document.getElementById("images")
 
 const urlList = []
 
 window.addEventListener("paste", async () => {
+
+
     const url = await window.electronApi.readClipboard()
 
     window.helpers.validateImageUrl(url)
@@ -20,6 +22,8 @@ window.addEventListener("paste", async () => {
 })
 
 downloadButton.addEventListener("click", async () => {
+
+    alert("asdasd")
 
     if (urlList.length == 0) return
 
