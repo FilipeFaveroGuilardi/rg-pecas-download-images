@@ -3,24 +3,45 @@ const sharp = require("sharp")
 const fs = require('fs');
 
 const downloadImage = async (url, savePath) => {
-    const placeHolderImageUrl = "https://images.ctfassets.net/hrltx12pl8hq/28ECAQiPJZ78hxatLTa7Ts/2f695d869736ae3b0de3e56ceaca3958/free-nature-images.jpg?fit=fill&w=1200&h=630"
-
-    const buffer = await fetch(placeHolderImageUrl)
+    const buffer = await fetch(url)
         .then(async (res) => {
-            console.log(res.headers)
-
             return await res.arrayBuffer()
         })
-    
+        .catch((err) => console.error(err))
+
+
     sharp(buffer)
         .jpeg()
         .toBuffer()
         .then((value) => {
             fs.createWriteStream(savePath).write(value)
         })
-        .catch(console.error)
+        .catch((err) => console.error(err))
+}
+
+const validateUrl = async (url) => {
+    try {
+        const newUrl = new URL(url)
+
+        const contentType = await fetch(newUrl, { mode: "no-cors", })
+            .then((res) => {
+                return res.headers.get("Content-Type")
+            })
+            .catch((err) => console.error(err))
+
+        
+
+        if (contentType.split("/")[0] != "image" || contentType == null) {
+            throw new Error()
+        }
+
+        return true
+    } catch (error) {
+        return false
+    }
 }
 
 module.exports = {
-    downloadImage
+    downloadImage,
+    validateUrl,
 }

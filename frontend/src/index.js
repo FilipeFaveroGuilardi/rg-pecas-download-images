@@ -1,8 +1,8 @@
-const { app, BrowserWindow, Menu, MenuItem, dialog, ipcMain } = require("electron")
+const { app, BrowserWindow, Menu, MenuItem, dialog, ipcMain, clipboard } = require("electron")
 const path = require("path")
 const fs = require("fs")
 const { createFoldersAndJsonFilesWithPdfFiles } = require("./helper/pdfHelper")
-const { downloadImage } = require("./helper/downloadHelper")
+const { downloadImage, validateUrl,  } = require("./helper/downloadHelper")
 
 const createWindow = () => {
     const window = new BrowserWindow({
@@ -40,15 +40,18 @@ Menu.setApplicationMenu(menu)
 // run app
 app.whenReady()
     .then(() => {
-        ipcMain.on("download-image", handleDownloadImage)
+        ipcMain.on("download:download-image", handleDownloadImage)
+        ipcMain.handle("download:validate-image-url", handleValidateUrl)
 
+        ipcMain.on("electron:write-clipboard", handleClipboardWrite)
+        ipcMain.handle("electron:read-clipboard", handleClipboardRead)
 
         createWindow()
     })
     .catch((err) => console.error(err))
 
 // functions
-const handleCreateJsonFiles = async () => {
+async function handleCreateJsonFiles() {
     const {canceled, filePaths} = await dialog.showOpenDialog({
         properties: ["multiSelections"]
     })
@@ -64,6 +67,18 @@ const handleCreateJsonFiles = async () => {
     }
 }
 
-const handleDownloadImage = (event) => {
-    downloadImage("asdasdasd", "/home/favero/Documentos/Codigo/produtosPai/frontend/img.jpg")
+function handleDownloadImage (event, url) {
+    downloadImage(url, "/home/favero/Documentos/Code/rg-pecas-download-images/frontend/img.jpg")
+}
+
+function handleValidateUrl(event, url) {
+    return validateUrl(url)
+}
+
+function handleClipboardRead(event) {
+    return clipboard.readText("clipboard")
+}
+
+function handleClipboardWrite(event, text) {
+    clipboard.write(text)
 }

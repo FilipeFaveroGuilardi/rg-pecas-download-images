@@ -27,7 +27,7 @@ const createFoldersAndJsonFilesWithPdfFiles = async (file, filename) => {
         createFolders(list, dirname)
         createJsonFile(list, dirname)
     })
-    .catch((err) => { throw new Error(err) })
+    .catch((err) => console.error(err))
 }
 
 const createFolders = (list, dirname) => {
