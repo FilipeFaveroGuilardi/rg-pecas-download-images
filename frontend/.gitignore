@@ -3,3 +3,7 @@ build
 npm-debug.log
 .env
 .DS_Store
+*.jpg
+path_db.json
+db.json
+img.jpg

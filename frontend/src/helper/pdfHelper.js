@@ -35,15 +35,22 @@ const createFolders = (list, dirname) => {
         let id = value.id
         const folderpath = path.join("/home/favero/Imagens/pai", dirname, id.toString())
 
-    
-        fs.mkdir(folderpath, (err) => {
-            if (err) {
-                console.error(err)
+        fs.access(folderpath, (err) => {
+            if (!err) {
+                return
             }
+
+            fs.mkdir(folderpath, (err) => {
+                if (err) {
+                    console.error(err)
+                }
+            })
         })
     
         
     })
+    console.log(list.length)
+    console.table(list)
 }
 
 const createJsonFile = (list, dirname) => {

@@ -1,5 +1,5 @@
 services:
   back:
-    image: pdf-parser/pdf-parser-json-api:latest
+    image: pdf-parse-json-api:beta
     ports:
       - "8887:8080"
