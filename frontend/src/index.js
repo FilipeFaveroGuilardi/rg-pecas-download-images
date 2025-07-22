@@ -2,7 +2,11 @@ const { app, BrowserWindow, Menu, MenuItem, dialog, ipcMain, clipboard } = requi
 const path = require("path")
 const fs = require("fs")
 const { createFoldersAndJsonFilesWithPdfFiles } = require("./helper/pdfHelper")
-const { downloadImage, validateUrl,  } = require("./helper/downloadHelper")
+const { downloadImage, validateUrl } = require("./helper/downloadHelper")
+const { getList, loadJson, replaceProduct, saveJson } = require('./helper/jsonHelper');
+const { loadPath, getPath, savePaths, addPath } = require('./helper/pathHelper');
+const Product = require("./entity/product")
+const { randomInt } = require("crypto")
 
 const createWindow = () => {
     const window = new BrowserWindow({
@@ -14,7 +18,7 @@ const createWindow = () => {
     })
 
     window.loadFile("./views/main.html")
-    
+
 }
 
 
@@ -28,28 +32,37 @@ menu.append(new MenuItem({
             label: "create json files",
             click: () => handleCreateJsonFiles()
         },
-        // set json file submenu
+        // set json file path submenu
         {
-            label: "set json db"
+            label: "set json db path",
+            click: () => handleSetPath("json", ["openFile"])
         }
     ]
 }))
 
-//Menu.setApplicationMenu(menu)
+Menu.setApplicationMenu(menu)
 
 // run app
 app.whenReady()
     .then(() => {
+        loadPath(loadJson)
+
         ipcMain.on("download:download-image", handleDownloadImage)
         ipcMain.handle("download:validate-image-url", handleValidateUrl)
+        ipcMain.handle("json:get-product", handleGetProduct)
+        ipcMain.on("json:next-product", handleNextProduct)
 
         ipcMain.on("electron:write-clipboard", handleClipboardWrite)
         ipcMain.handle("electron:read-clipboard", handleClipboardRead)
+        
 
         createWindow()
     })
     .catch((err) => console.error(err))
-
+app.on("before-quit", (ev) => {
+    savePaths()
+    saveJson(path.join(__dirname, "..", "db.json"))
+})
 // functions
 async function handleCreateJsonFiles() {
     const {canceled, filePaths} = await dialog.showOpenDialog({
@@ -67,8 +80,10 @@ async function handleCreateJsonFiles() {
     }
 }
 
-function handleDownloadImage (event, url) {
-    downloadImage(url, "/home/favero/Documentos/Code/rg-pecas-download-images/frontend/img.jpg")
+function handleDownloadImage (event, url, product, index) {
+    const folderPath = path.join(getPath("json"), "../")
+
+    downloadImage(url, path.join(folderPath, product.id.toString(), product.title + index.toString() + ".jpg"))
 }
 
 function handleValidateUrl(event, url) {
@@ -81,4 +96,23 @@ function handleClipboardRead(event) {
 
 function handleClipboardWrite(event, text) {
     clipboard.write(text)
+}
+
+function handleGetProduct(event) {
+    return getList().filter((p) => !p.isCompleted).pop()
+}
+
+function handleNextProduct(event, product) {
+    const newProduct = new Product(product.id, product.title, product.isCompleted).checkIsCompleted()
+
+
+    replaceProduct(newProduct)
+}
+
+async function handleSetPath(key, properties) {
+    const { canceled, filePaths } = await dialog.showOpenDialog({properties})
+    
+    if (canceled) return
+
+    addPath(key, filePaths[0])
 }

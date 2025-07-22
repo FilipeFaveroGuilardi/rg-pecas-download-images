@@ -1,6 +1,9 @@
 const downloadButton = document.getElementById("download")
 const imagesDiv = document.getElementById("images")
 
+const idLabel = document.getElementById("id")
+const titleLabel = document.getElementById("title")
+
 const urlList = []
 
 window.addEventListener("paste", async () => {
@@ -21,13 +24,25 @@ window.addEventListener("paste", async () => {
         .catch((err) => console.error(err))
 })
 
-downloadButton.addEventListener("click", async () => {
+window.addEventListener("DOMContentLoaded", () => {
+    renderProduct()
+})
 
-    alert("asdasd")
+window.addEventListener("copy", async () => {
+    const product = await getProduct()
+
+    window.electronApi.writeInClipboard(product.title)
+})
+
+downloadButton.addEventListener("click", async () => {
+    renderProduct()
+
+    const product = await getProduct()
 
     if (urlList.length == 0) return
 
-    for (let url of urlList) {
+    for (let i = 0; i < urlList.length, i++;) {
+        const url = urlList[i]
 
         window.helpers.validateImageUrl(url)
             .then((res) => {
@@ -35,10 +50,12 @@ downloadButton.addEventListener("click", async () => {
                     return
                 }
 
-                window.helpers.downloadImage(url)
+                window.helpers.downloadImage(url, product, i)
             })
             .catch((err) => console.error(err))
     }
+
+    window.helpers.nextProduct(product)
 
     urlList = []
     renderImages()
@@ -52,4 +69,15 @@ function renderImages() {
 
         imagesDiv.appendChild(node)
     }
+}
+
+async function renderProduct() {
+    const product = await getProduct()
+
+    idLabel.textContent = product.id
+    titleLabel.textContent = product.title
+}
+
+async function getProduct() {
+    return await window.helpers.getProduct()
 }

@@ -1,8 +1,10 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("helpers", {
-    downloadImage: (url) => ipcRenderer.send("download:download-image", url),
+    downloadImage: (url, product, index) => ipcRenderer.send("download:download-image", url, product, index),
     validateImageUrl: (url) => ipcRenderer.invoke("download:validate-image-url", url),
+    getProduct: () => ipcRenderer.invoke("json:get-product"),
+    nextProduct: (product) => ipcRenderer.send("json:next-product", product)
 })
 
 contextBridge.exposeInMainWorld("electronApi", {
