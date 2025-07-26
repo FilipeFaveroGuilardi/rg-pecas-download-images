@@ -3,8 +3,15 @@ const imagesDiv = document.getElementById("images")
 
 const idLabel = document.getElementById("id")
 const titleLabel = document.getElementById("title")
+const remainingProductsLabel = document.getElementById("remaining-products")
+const maxProductsLabel = document.getElementById("max-products")
 
 const urlList = []
+
+window.renderer.updateUI(() => {
+    renderImages()
+    renderProduct()
+})
 
 window.addEventListener("paste", async () => {
 
@@ -30,39 +37,34 @@ window.addEventListener("DOMContentLoaded", () => {
 
 window.addEventListener("copy", async () => {
     const product = await getProduct()
-
-    window.electronApi.writeInClipboard(product.title)
+    window.electronApi.writeInClipboard(product.title.toString())
 })
 
 downloadButton.addEventListener("click", async () => {
-    renderProduct()
+    if (urlList.length == 0) {
+        alert("No Links")
+        return
+    }
 
     const product = await getProduct()
+    for (let i = 0; i < urlList.length; i++) {
 
-    if (urlList.length == 0) return
-
-    for (let i = 0; i < urlList.length, i++;) {
         const url = urlList[i]
 
-        window.helpers.validateImageUrl(url)
-            .then((res) => {
-                if (!res) {
-                    return
-                }
 
-                window.helpers.downloadImage(url, product, i)
-            })
-            .catch((err) => console.error(err))
+        window.helpers.downloadImage(url, product, i)
     }
 
     window.helpers.nextProduct(product)
 
-    urlList = []
+    urlList.splice(0, urlList.length)
+    window.electronApi.writeInClipboard(product.title.toString())
     renderImages()
+    renderProduct()
 })
 
 function renderImages() {
-    imagesDiv.innerHTML = ""
+    imagesDiv.innerHTML = null
     for (let url of urlList) {
         const node = document.createElement("img")
         node.setAttribute("src", url)
@@ -73,9 +75,14 @@ function renderImages() {
 
 async function renderProduct() {
     const product = await getProduct()
+    const maxProducts = await window.helpers.getMaxProducts()
+    const remainingProducts = await window.helpers.getRemainingProducts()
 
     idLabel.textContent = product.id
     titleLabel.textContent = product.title
+
+    remainingProductsLabel.textContent = remainingProducts
+    maxProductsLabel.textContent = maxProducts
 }
 
 async function getProduct() {

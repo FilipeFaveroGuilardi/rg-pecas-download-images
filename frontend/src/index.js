@@ -1,46 +1,56 @@
-const { app, BrowserWindow, Menu, MenuItem, dialog, ipcMain, clipboard } = require("electron")
+const { app, BrowserWindow, Menu, MenuItem, ipcMain } = require("electron")
 const path = require("path")
-const fs = require("fs")
-const { createFoldersAndJsonFilesWithPdfFiles } = require("./helper/pdfHelper")
-const { downloadImage, validateUrl } = require("./helper/downloadHelper")
-const { getList, loadJson, replaceProduct, saveJson } = require('./helper/jsonHelper');
-const { loadPath, getPath, savePaths, addPath } = require('./helper/pathHelper');
-const Product = require("./entity/product")
-const { randomInt } = require("crypto")
+const { loadJson, saveJson } = require('./helper/jsonHelper');
+const { loadPath, getPath, savePaths } = require('./helper/pathHelper');
+const {
+    handleClipboardRead,
+    handleClipboardWrite,
+    handleCreateJsonFiles,
+    handleDownloadImage,
+    handleGetProduct,
+    handleNextProduct,
+    handleSetPath,
+    handleValidateUrl,
+    handleGetMaxProducts,
+    handleGetRemainingProducts
+} = require("./handlerBus")
 
 const createWindow = () => {
     const window = new BrowserWindow({
         height: 720,
         width: 1024,
         webPreferences: {
-            preload: path.join(__dirname, "preload.js")
+            preload: path.join(__dirname, "preload.js"),
         }
     })
-
     window.loadFile("./views/main.html")
 
+    const menu = new Menu()
+    // create config menu
+    menu.append(new MenuItem({
+        label: "config",
+        submenu: [
+            // create json files submenu
+            {
+                label: "create json files",
+                click: () => handleCreateJsonFiles()
+            },
+            // set json file path submenu
+            {
+                label: "set json db path",
+                click: () => {
+                    handleSetPath("json")
+                        .then(() => window.webContents.send("UI:update"))
+                }
+            }
+        ]
+    }))
+
+    Menu.setApplicationMenu(menu)
 }
 
 
-const menu = new Menu()
-// create config menu
-menu.append(new MenuItem({
-    label: "config",
-    submenu: [
-        // create json files submenu
-        {
-            label: "create json files",
-            click: () => handleCreateJsonFiles()
-        },
-        // set json file path submenu
-        {
-            label: "set json db path",
-            click: () => handleSetPath("json", ["openFile"])
-        }
-    ]
-}))
 
-Menu.setApplicationMenu(menu)
 
 // run app
 app.whenReady()
@@ -51,68 +61,26 @@ app.whenReady()
         ipcMain.handle("download:validate-image-url", handleValidateUrl)
         ipcMain.handle("json:get-product", handleGetProduct)
         ipcMain.on("json:next-product", handleNextProduct)
+        ipcMain.handle("products:max-products", handleGetMaxProducts)
+        ipcMain.handle("products:remaining-products", handleGetRemainingProducts)
 
         ipcMain.on("electron:write-clipboard", handleClipboardWrite)
         ipcMain.handle("electron:read-clipboard", handleClipboardRead)
-        
+
 
         createWindow()
     })
     .catch((err) => console.error(err))
 app.on("before-quit", (ev) => {
     savePaths()
-    saveJson(path.join(__dirname, "..", "db.json"))
+    //saveJson(getJsonPath())
 })
-// functions
-async function handleCreateJsonFiles() {
-    const {canceled, filePaths} = await dialog.showOpenDialog({
-        properties: ["multiSelections"]
-    })
 
-    if (canceled) {
-        return;
-    }
+function getJsonPath() {
+    const defaultPath = "/home/filipe-f-guilardi/Pictures/pai/ProdutoRelatorioUICatalogoProdutoSource/ProdutoRelatorioUICatalogoProdutoSource_db.json"
+    const jsonPath = getPath("json") === undefined ? defaultPath : getPath("json")
 
-    for(let pdfFilePath of filePaths) {
-        const stream = fs.createReadStream(pdfFilePath)
+    console.log(getPath("json"))
 
-        createFoldersAndJsonFilesWithPdfFiles(stream, path.basename(pdfFilePath))
-    }
-}
-
-function handleDownloadImage (event, url, product, index) {
-    const folderPath = path.join(getPath("json"), "../")
-
-    downloadImage(url, path.join(folderPath, product.id.toString(), product.title + index.toString() + ".jpg"))
-}
-
-function handleValidateUrl(event, url) {
-    return validateUrl(url)
-}
-
-function handleClipboardRead(event) {
-    return clipboard.readText("clipboard")
-}
-
-function handleClipboardWrite(event, text) {
-    clipboard.write(text)
-}
-
-function handleGetProduct(event) {
-    return getList().filter((p) => !p.isCompleted).pop()
-}
-
-function handleNextProduct(event, product) {
-    const newProduct = new Product(product.id, product.title, product.isCompleted).checkIsCompleted()
-
-
-    replaceProduct(newProduct)
-}
-
-async function handleSetPath(key, properties) {
-    const { canceled, filePaths } = await dialog.showOpenDialog({properties})
-    
-    if (canceled) return
-
-    addPath(key, filePaths[0])
+    return jsonPath
 }

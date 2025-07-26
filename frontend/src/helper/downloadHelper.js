@@ -10,6 +10,7 @@ const downloadImage = async (url, savePath) => {
         .catch((err) => console.error(err))
 
 
+
     sharp(buffer)
         .jpeg()
         .toBuffer()
@@ -29,7 +30,7 @@ const validateUrl = async (url) => {
             })
             .catch((err) => console.error(err))
 
-        
+
 
         if (contentType.split("/")[0] != "image" || contentType == null) {
             throw new Error()

@@ -1,33 +1,37 @@
+const path = require("path");
 const Product = require("../entity/product")
 const fs = require('fs');
 
-const productList = []
+let productList = []
 
 function loadJson(filePath) {
-    fs.readFile(filePath, "utf-8", (err, data) => {
+    fs.readFile(filePath, "utf-8", async (err, data) => {
         productList.splice(0, productList.length)
 
-        console.log(data);
-        
-
         const list = JSON.parse(data)
-        console.table(list)
 
         const newList = []
 
         for (const product of list) {
-            const newProduct = new Product(product?.id, product?.name, product?.isCompleted)
+            const id = product?.id
+            const title = product?.name.replace("Classe", "")
+            let isCompleted = false
 
+            const foldersPath = path.join(filePath, "../", id.toString())
+
+            const files = await fs.promises.readdir(foldersPath)
+            isCompleted = files.length > 0
+
+            const newProduct = new Product(id, title, isCompleted)
             newList.push(newProduct)
         }
-
         productList = newList
     })
 }
 
 function saveJson(filePath) {
     fs.writeFile(filePath, JSON.stringify(productList), "utf-8", (err) => {
-        if (err) console.error(err)
+        if (err) return
     })
 }
 
@@ -37,7 +41,8 @@ function getList() {
 
 
 function replaceProduct(product) {
-    const index = productList.indexOf(productList.filter((p) => p.id == product.id))
+    const newProduct = productList.filter((p) => product.id === p.id)[0]
+    const index = productList.indexOf(newProduct)
 
     productList.splice(index, 1, product)
 }

@@ -12,17 +12,25 @@ async function loadPath(loadJson) {
         }
 
         fs.readFile(path.join(__dirname, "../../path_db.json"), "utf-8", (err, data) => {
-            console.log(data)
-            pathList = data === undefined ? {} : JSON.parse(data)
+            pathList = data === "" ? {} : JSON.parse(data)
+
+            if (loadJson !== undefined) {
+                const defaultPath = "/home/filipe-f-guilardi/Pictures/pai/ProdutoRelatorioUICatalogoProdutoSource/ProdutoRelatorioUICatalogoProdutoSource_db.json"
+                const jsonPath = getPath("json") === undefined ? defaultPath : getPath("json")
+
+
+                loadJson(jsonPath)
+            }
         })
 
-        const defaultPath = "/home/favero/Imagens/pai/ProdutoRelatorioUICatalogoProdutoSource/ProdutoRelatorioUICatalogoProdutoSource_db.json"
-        const jsonPath = getPath("json") === undefined ? defaultPath : getPath("json")
+
     })
 }
 
 function getPath(key) {
-    return pathList[key]
+    if (pathList !== null) {
+        return pathList[key]
+    }
 }
 
 function addPath(key, value) {
@@ -35,7 +43,7 @@ function savePaths() {
     }
 
     fs.writeFile(path.join(__dirname, "../../path_db.json"), JSON.stringify(pathList), "utf-8", (err) => {
-        if (err) console.error(err)
+        if (err) console.error(err);
     })
 }
 
